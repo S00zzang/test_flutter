@@ -53,7 +53,7 @@ class _FindPasswordPageState extends State<FindPasswordPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('비밀번호 찾기')),
+      appBar: AppBar(title: const Text('Find Password')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

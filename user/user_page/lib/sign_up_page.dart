@@ -88,7 +88,7 @@ class _SignUpPageState extends State<SignUpPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('회원가입')),
+      appBar: AppBar(title: const Text('SIGN UP')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(

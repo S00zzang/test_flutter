@@ -1,65 +1,53 @@
 import 'package:flutter/material.dart';
-import 'login_page.dart'; // 로그인 페이지
-import 'sign_up_page.dart'; // 회원가입 페이지 임포트
+import 'login_page.dart';
 
 void main() {
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Tune Talk',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: FirstScreen(),
+      home: SplashScreen(),
     );
   }
 }
 
-class FirstScreen extends StatelessWidget {
-  const FirstScreen({super.key});
+class SplashScreen extends StatefulWidget {
+  @override
+  _SplashScreenState createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // 로고 화면을 2초 뒤에 로그인 페이지로 전환
+    Future.delayed(Duration(seconds: 2), () {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => LoginPage()),
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Welcome to Tune Talk')),
+      backgroundColor: Colors.blueAccent,
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            // 로고
-            const Text(
-              'Tune Talk',
-              style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 50),
-            // 로그인 버튼
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginPage()),
-                );
-              },
-              child: const Text('로그인'),
-            ),
-            const SizedBox(height: 20),
-            // 회원가입 버튼
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => SignUpPage()),
-                );
-              },
-              child: const Text('회원가입'),
-            ),
-          ],
+        child: Text(
+          'Tune Talk',
+          style: TextStyle(
+            fontSize: 48,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
       ),
     );
