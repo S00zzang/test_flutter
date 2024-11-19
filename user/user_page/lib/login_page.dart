@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // SharedPreferences import 추가
 import 'find_pw.dart'; // 비밀번호 찾기 페이지
 import 'sign_up_page.dart'; // 회원가입 페이지
+import 'spotify_connect_page.dart'; // 스포티파이 연동 페이지
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -14,7 +16,8 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   bool _passwordVisible = false;
 
-  void _login() {
+  // 로그인 처리 로직
+  void _login() async {
     final email = _emailController.text;
     final password = _passwordController.text;
 
@@ -23,9 +26,23 @@ class _LoginPageState extends State<LoginPage> {
         const SnackBar(content: Text('이메일과 비밀번호를 입력해주세요.')),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('로그인 성공!')),
-      );
+      // SharedPreferences로 연동 여부 체크
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      bool isSpotifyLinked = prefs.getBool('isSpotifyLinked') ?? false;
+
+      // 스포티파이 연동이 되어 있지 않으면 연동 페이지로 이동
+      if (!isSpotifyLinked) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => SpotifyConnectPage(nickname: '사용자')),
+        );
+      } else {
+        // 연동이 완료되었으면 홈 화면 등으로 이동
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('로그인 성공!')),
+        );
+      }
     }
   }
 
