@@ -104,6 +104,11 @@ class _MyPageScreenState extends State<MyPageScreen> {
                       ElevatedButton(
                         onPressed: () {
                           // 개인정보 수정 페이지로 이동하는 로직
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => EditProfilePage()),
+                          );
                         },
                         child: const Text('Edit Profile'),
                       ),
@@ -113,11 +118,11 @@ class _MyPageScreenState extends State<MyPageScreen> {
                   const Divider(),
                   const SizedBox(height: 20),
                   const Text(
-                    'Friends List',
+                    'Following',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 10),
-                  // 친구 목록
+                  // 팔로잉 목록
                   Expanded(
                     child: ListView.builder(
                       itemCount: friends.length,
@@ -149,7 +154,7 @@ class _MyPageScreenState extends State<MyPageScreen> {
                                 },
                                 child: TextButton(
                                   onPressed: () {
-                                    // 친구 삭제 버튼 클릭 시
+                                    // 팔로우 삭제 버튼 클릭 시
                                   },
                                   style: ButtonStyle(
                                     foregroundColor:
@@ -163,7 +168,7 @@ class _MyPageScreenState extends State<MyPageScreen> {
                                           fontWeight: FontWeight.normal),
                                     ),
                                   ),
-                                  child: const Text('Delete'),
+                                  child: const Text('Unfollow'),
                                 ),
                               ),
                             ],
@@ -241,7 +246,7 @@ class NavigationDrawer extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             buildMenuItem(
-              Icons.favorite_outline,
+              Icons.favorite_outlined,
               'Like',
               '/like',
               context,
@@ -257,7 +262,7 @@ class NavigationDrawer extends StatelessWidget {
             const SizedBox(height: 20),
             buildMenuItem(Icons.family_restroom_outlined, '', '/club', context),
             const SizedBox(height: 20),
-            buildMenuItem(Icons.favorite_outline, '', '/like', context),
+            buildMenuItem(Icons.favorite_outlined, '', '/like', context),
           ]
         ],
       ),
