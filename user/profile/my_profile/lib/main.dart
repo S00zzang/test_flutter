@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'edit_profile.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,7 +12,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: MyPageScreen(),
+      home: const MyPageScreen(),
       routes: {
         '/myPage': (context) => const MyPageScreen(),
         '/playlist': (context) => const PlaylistScreen(),
@@ -77,8 +78,7 @@ class _MyPageScreenState extends State<MyPageScreen> {
                   const SizedBox(height: 20),
                   Row(
                     children: [
-                      // 프로필 사진 크기를 키움
-                      CircleAvatar(
+                      const CircleAvatar(
                         radius: 60, // 프로필 사진 크기를 키움
                         backgroundImage: NetworkImage(
                             'https://www.example.com/path_to_profile_picture.jpg'),
@@ -124,7 +124,7 @@ class _MyPageScreenState extends State<MyPageScreen> {
                       itemBuilder: (context, index) {
                         final friend = friends[index];
                         return ListTile(
-                          leading: CircleAvatar(
+                          leading: const CircleAvatar(
                             radius: 20,
                             backgroundImage: NetworkImage(
                                 'https://www.example.com/path_to_friend_profile.jpg'),
@@ -151,19 +151,19 @@ class _MyPageScreenState extends State<MyPageScreen> {
                                   onPressed: () {
                                     // 친구 삭제 버튼 클릭 시
                                   },
-                                  child: const Text('Delete'),
                                   style: ButtonStyle(
                                     foregroundColor:
-                                        MaterialStateProperty.all(Colors.red),
-                                    backgroundColor: MaterialStateProperty.all(
+                                        WidgetStateProperty.all(Colors.red),
+                                    backgroundColor: WidgetStateProperty.all(
                                         Colors.transparent),
-                                    textStyle: MaterialStateProperty.all(
-                                      TextStyle(
+                                    textStyle: WidgetStateProperty.all(
+                                      const TextStyle(
                                           color: Colors.white,
                                           fontSize: 16,
                                           fontWeight: FontWeight.normal),
                                     ),
                                   ),
+                                  child: const Text('Delete'),
                                 ),
                               ),
                             ],
@@ -210,7 +210,7 @@ class NavigationDrawer extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(height: 30), // 메뉴 항목과의 갭
+          const SizedBox(height: 30), // 메뉴 항목과의 갭
           if (!isIconOnly) ...[
             buildMenuItem(
               Icons.account_box_outlined,
@@ -218,28 +218,28 @@ class NavigationDrawer extends StatelessWidget {
               '/myPage',
               context,
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             buildMenuItem(
               Icons.library_music_outlined,
               'Playlist',
               '/playlist',
               context,
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             buildMenuItem(
               Icons.chat_bubble_outline,
               'Talk',
               '/talk',
               context,
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             buildMenuItem(
               Icons.family_restroom_outlined,
               'Club',
               '/club',
               context,
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             buildMenuItem(
               Icons.favorite_outline,
               'Like',
@@ -249,14 +249,14 @@ class NavigationDrawer extends StatelessWidget {
           ],
           if (isIconOnly) ...[
             buildMenuItem(Icons.account_box_outlined, '', '/myPage', context),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             buildMenuItem(
                 Icons.library_music_outlined, '', '/playlist', context),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             buildMenuItem(Icons.chat_bubble_outline, '', '/talk', context),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             buildMenuItem(Icons.family_restroom_outlined, '', '/club', context),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             buildMenuItem(Icons.favorite_outline, '', '/like', context),
           ]
         ],
