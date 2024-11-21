@@ -269,7 +269,8 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                   itemBuilder: (context, index) {
                     final track = musicList[index];
                     return ListTile(
-                      leading: Image.network(track.album.images.first.url),
+                      leading: Image.network(track.album.images.first.url,
+                          width: 300, height: 300),
                       title: Text(track.name),
                       subtitle:
                           Text(track.artists.map((e) => e.name).join(', ')),
@@ -378,5 +379,5 @@ class Image {
     return Image(url: json['url']);
   }
 
-  static network(String url) {}
+  static network(String url, {required int width, required int height}) {}
 }

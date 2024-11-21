@@ -1,207 +1,270 @@
 import 'package:flutter/material.dart';
-import 'main.dart'; // ChatListPage가 포함된 main.dart를 import
+import 'main.dart';
+import 'chatroom.dart'
+    as chatroom; // chatroom.dart에서의 Image는 chatroom.Image로 구분
 
-class RequestChatPage extends StatelessWidget {
-  const RequestChatPage({super.key});
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: RequestPage(),
+    );
+  }
+}
+
+class RequestPage extends StatefulWidget {
+  @override
+  _RequestPageState createState() => _RequestPageState();
+}
+
+class _RequestPageState extends State<RequestPage> {
+  // 유저 목록을 리스트로 관리
+  List<UserRequest> users = [
+    UserRequest(
+      profileImage: 'https://via.placeholder.com/150',
+      nickname: 'User1',
+      albumCover: 'https://via.placeholder.com/300x300',
+      artistName: 'Artist1',
+      songTitle: 'Song1',
+    ),
+    UserRequest(
+      profileImage: 'https://via.placeholder.com/150',
+      nickname: 'User2',
+      albumCover: 'https://via.placeholder.com/300x300',
+      artistName: 'Artist2',
+      songTitle: 'Song2',
+    ),
+    UserRequest(
+      profileImage: 'https://via.placeholder.com/150',
+      nickname: 'User3',
+      albumCover: 'https://via.placeholder.com/300x300',
+      artistName: 'Artist3',
+      songTitle: 'Song3',
+    ),
+    UserRequest(
+      profileImage: 'https://via.placeholder.com/150',
+      nickname: 'User4',
+      albumCover: 'https://via.placeholder.com/300x300',
+      artistName: 'Artist4',
+      songTitle: 'Song4',
+    ),
+    UserRequest(
+      profileImage: 'https://via.placeholder.com/150',
+      nickname: 'User5',
+      albumCover: 'https://via.placeholder.com/300x300',
+      artistName: 'Artist5',
+      songTitle: 'Song5',
+    ),
+  ];
+
+  // 유저를 삭제하는 함수
+  void _removeUser(int index) {
+    setState(() {
+      users.removeAt(index); // 리스트에서 해당 유저를 제거
+    });
+  }
+
+  // Accept 버튼 클릭 시 ChatRoomPage로 이동
+  void _goToChatRoomPage(BuildContext context) {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+          builder: (context) =>
+              chatroom.ChatRoomPage()), // chatroom.ChatRoomPage로 이동
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Request Chat'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back),
           onPressed: () {
-            // ChatListPage로 이동
+            // 뒤로 가기 버튼 누르면 ChatListPage로 이동
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const ChatListPage()),
+              MaterialPageRoute(builder: (context) => ChatListPage()),
             );
           },
         ),
+        title: Text('Request'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Request',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+      body: ListView.builder(
+        itemCount: users.length,
+        itemBuilder: (context, index) {
+          return Column(
+            children: [
+              UserRequestWidget(
+                profileImage: users[index].profileImage,
+                nickname: users[index].nickname,
+                albumCover: users[index].albumCover,
+                artistName: users[index].artistName,
+                songTitle: users[index].songTitle,
+                onReject: () => _removeUser(index), // Reject 클릭 시 유저 삭제
+                onAccept: () =>
+                    _goToChatRoomPage(context), // Accept 클릭 시 ChatRoomPage로 이동
               ),
-            ),
-            const SizedBox(height: 20),
+              Divider(),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
 
-            // 프로필 이미지와 닉네임, 플레이리스트 앨범 이미지
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 40,
-                  backgroundImage:
-                      NetworkImage('https://www.example.com/profile.jpg'),
-                ),
-                const SizedBox(width: 20),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'User 1', // 닉네임
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 10),
-                    GestureDetector(
-                      onTap: () {
-                        showSongListPopup(context); // 앨범 클릭 시 팝업
-                      },
-                      child: Image.network(
-                        'https://www.example.com/album.jpg', // 플레이리스트 앨범 이미지
-                        width: 100,
-                        height: 100,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: 20),
-                Column(
-                  children: [
-                    ElevatedButton(
-                      onPressed: () {
-                        // Accept 버튼 클릭 시 처리
-                      },
-                      child: const Text('Accept'),
-                    ),
-                    const SizedBox(height: 10),
-                    ElevatedButton(
-                      onPressed: () {
-                        // Reject 버튼 클릭 시 처리
-                      },
-                      child: const Text('Reject'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            const Divider(),
-            const SizedBox(height: 20),
+class UserRequest {
+  final String profileImage;
+  final String nickname;
+  final String albumCover;
+  final String artistName;
+  final String songTitle;
 
-            // 다른 유저 요청
-            const Text(
-              'Other Requests',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            // 다른 요청들 나열 (여러 유저가 있다고 가정)
-            const RequestItemWidget(),
-            const Divider(),
-            const RequestItemWidget(),
-            const Divider(),
-            const RequestItemWidget(),
-          ],
-        ),
+  UserRequest({
+    required this.profileImage,
+    required this.nickname,
+    required this.albumCover,
+    required this.artistName,
+    required this.songTitle,
+  });
+}
+
+class UserRequestWidget extends StatelessWidget {
+  final String profileImage;
+  final String nickname;
+  final String albumCover;
+  final String artistName;
+  final String songTitle;
+  final VoidCallback onReject;
+  final VoidCallback onAccept;
+
+  UserRequestWidget({
+    required this.profileImage,
+    required this.nickname,
+    required this.albumCover,
+    required this.artistName,
+    required this.songTitle,
+    required this.onReject,
+    required this.onAccept,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 30,
+            backgroundImage: NetworkImage(profileImage),
+          ),
+          SizedBox(width: 10),
+          Text(nickname),
+          SizedBox(width: 20),
+          ElevatedButton(
+            onPressed: () => _showPlaylistPopup(context),
+            child: Text('Playlist'),
+          ),
+          Spacer(),
+          ElevatedButton(
+            onPressed: onAccept, // Accept 버튼 클릭 시 ChatRoomPage로 이동
+            child: Text('Accept'),
+          ),
+          SizedBox(width: 10),
+          ElevatedButton(
+            onPressed: onReject, // Reject 버튼 클릭 시 유저 삭제
+            child: Text('Reject'),
+          ),
+        ],
       ),
     );
   }
 
-  // 노래 리스트 팝업
-  void showSongListPopup(BuildContext context) {
+  // 플레이리스트 팝업을 표시하는 함수
+  void _showPlaylistPopup(BuildContext context) {
     showDialog(
       context: context,
+      barrierColor: Colors.black.withOpacity(1), // 배경을 불투명으로 설정
       builder: (BuildContext context) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.5,
-          minChildSize: 0.3,
-          maxChildSize: 0.8,
-          builder: (BuildContext context, scrollController) {
-            return Dialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0),
-              ),
-              child: GestureDetector(
-                onPanUpdate: (details) {
-                  // 드래그로 팝업을 움직일 수 있게 처리
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Align(
-                        alignment: Alignment.topRight,
-                        child: IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () {
-                            Navigator.of(context).pop(); // 팝업 닫기
-                          },
-                        ),
-                      ),
-                      const Text(
-                        'Song List',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      // 노래 목록 예시
-                      const Text('Song 1'),
-                      const Text('Song 2'),
-                      const Text('Song 3'),
-                      const Text('Song 4'),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
+        return PlaylistPopup(
+          artistName: artistName,
+          songTitle: songTitle,
+          albumCover: albumCover,
         );
       },
     );
   }
 }
 
-class RequestItemWidget extends StatelessWidget {
-  const RequestItemWidget({super.key});
+class PlaylistPopup extends StatelessWidget {
+  final String artistName;
+  final String songTitle;
+  final String albumCover;
+
+  PlaylistPopup({
+    required this.artistName,
+    required this.songTitle,
+    required this.albumCover,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        CircleAvatar(
-          radius: 30,
-          backgroundImage: NetworkImage('https://www.example.com/profile.jpg'),
-        ),
-        const SizedBox(width: 15),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'User 2',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    return Dialog(
+      insetPadding:
+          EdgeInsets.symmetric(horizontal: 200, vertical: 15), // 팝업 크기 조정
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '$artistName - $songTitle',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.close),
+                      onPressed: () {
+                        Navigator.of(context).pop(); // 팝업 닫기
+                      },
+                    ),
+                  ],
+                ),
+                SizedBox(height: 20),
+                chatroom.Image.network(
+                  albumCover,
+                  width: 120,
+                  height: 120,
+                ),
+                SizedBox(height: 20),
+                Text(
+                  'Artist: $artistName',
+                  style: TextStyle(fontSize: 14),
+                ),
+                Text(
+                  'Song: $songTitle',
+                  style: TextStyle(fontSize: 14),
+                ),
+              ],
             ),
-            const SizedBox(height: 5),
-            const Text('Request message or info'),
-          ],
+          ),
         ),
-        const Spacer(),
-        ElevatedButton(
-          onPressed: () {
-            // Accept 버튼 클릭 시 처리
-          },
-          child: const Text('Accept'),
-        ),
-        const SizedBox(width: 10),
-        ElevatedButton(
-          onPressed: () {
-            // Reject 버튼 클릭 시 처리
-          },
-          child: const Text('Reject'),
-        ),
-      ],
+      ),
     );
   }
 }

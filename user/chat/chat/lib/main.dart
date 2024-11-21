@@ -1,5 +1,3 @@
-// main.dart
-
 import 'package:flutter/material.dart';
 import 'chatroom.dart'; // ChatRoomPage를 불러오기 위해 import
 import 'request.dart'; // RequestChatPage를 불러오기 위해 import
@@ -18,7 +16,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/chat': (context) => const ChatListPage(),
         '/RequestChat': (context) =>
-            const RequestChatPage(), // request.dart에 정의된 RequestChatPage를 사용
+            RequestPage(), // request.dart에 정의된 RequestPage를 사용
         '/chatroom': (context) => const ChatRoomPage(), // ChatRoomPage 추가
       },
       home: const ChatListPage(),
