@@ -192,7 +192,7 @@ class _EditProfileScreenState extends State<EditProfilePage> {
           onPressed: () {
             // 메인 페이지로 이동
             Navigator.push(context,
-                MaterialPageRoute(builder: (context) => MyPageScreen()));
+                MaterialPageRoute(builder: (context) => const MyPageScreen()));
           },
         ),
       ),

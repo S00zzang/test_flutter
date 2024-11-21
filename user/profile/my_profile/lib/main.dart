@@ -107,7 +107,7 @@ class _MyPageScreenState extends State<MyPageScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => EditProfilePage()),
+                                builder: (context) => const EditProfilePage()),
                           );
                         },
                         child: const Text('Edit Profile'),
