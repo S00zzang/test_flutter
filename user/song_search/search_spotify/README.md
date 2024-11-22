@@ -29,6 +29,21 @@ Flutter Web에서는 API 요청이 CORS(Cross-Origin Resource Sharing) 정책에
 + Spotify API에 접근하려면 액세스 토큰이 필요합니다. 이 토큰은 민감한 정보이기 때문에 클라이언트 애플리케이션(예: Flutter 앱)에 직접 노출되는 것은 보안상 위험합니다.
 
 # 설정
+pubspec.yaml
+
+```
+dependencies:
+  flutter:
+    sdk: flutter
+
+  http: ^1.2.2
+
+  cupertino_icons: ^1.0.8
+```
+
+$ flutter pub get
+
+
 macos/Runner/DebugProfile.entitlements
 
 ```
@@ -36,3 +51,4 @@ macos/Runner/DebugProfile.entitlements
 	<true/>
 ```
 
+$ node index.js
