@@ -52,8 +52,8 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     try {
       final result = await SpotifySdk.connectToSpotifyRemote(
         clientId:
-            'your-client-id', // Spotify Developer Dashboard에서 발급받은 clientId
-        redirectUrl: 'your-redirect-url', // 예: http://localhost:8888/callback
+            'cc1046e4674f4a2faf2604736c8fc30c', // Spotify Developer Dashboard에서 발급받은 clientId
+        redirectUrl: 'ku.wave.dot.dot.dot', // 예: http://localhost:8888/callback
       );
       print("Spotify connected: $result");
     } catch (e) {
