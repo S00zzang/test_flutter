@@ -8,6 +8,8 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -17,6 +19,8 @@ class MyApp extends StatelessWidget {
 }
 
 class RequestPage extends StatefulWidget {
+  const RequestPage({super.key});
+
   @override
   _RequestPageState createState() => _RequestPageState();
 }
@@ -70,11 +74,11 @@ class _RequestPageState extends State<RequestPage> {
 
   // Accept 버튼 클릭 시 ChatRoomPage로 이동
   void _goToChatRoomPage(BuildContext context) {
-    Navigator.pushReplacement(
+    Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (context) =>
-              chatroom.ChatRoomPage()), // chatroom.ChatRoomPage로 이동
+        builder: (context) => chatroom.ChatRoomPage(),
+      ),
     );
   }
 
@@ -86,7 +90,7 @@ class _RequestPageState extends State<RequestPage> {
           icon: Icon(Icons.arrow_back),
           onPressed: () {
             // 뒤로 가기 버튼 누르면 ChatListPage로 이동
-            Navigator.pushReplacement(
+            Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => ChatListPage()),
             );
@@ -143,7 +147,8 @@ class UserRequestWidget extends StatelessWidget {
   final VoidCallback onReject;
   final VoidCallback onAccept;
 
-  UserRequestWidget({
+  const UserRequestWidget({
+    super.key,
     required this.profileImage,
     required this.nickname,
     required this.albumCover,
@@ -166,10 +171,7 @@ class UserRequestWidget extends StatelessWidget {
           SizedBox(width: 10),
           Text(nickname),
           SizedBox(width: 20),
-          ElevatedButton(
-            onPressed: () => _showPlaylistPopup(context),
-            child: Text('Playlist'),
-          ),
+          // Playlist 버튼 제거
           Spacer(),
           ElevatedButton(
             onPressed: onAccept, // Accept 버튼 클릭 시 ChatRoomPage로 이동
@@ -181,89 +183,6 @@ class UserRequestWidget extends StatelessWidget {
             child: Text('Reject'),
           ),
         ],
-      ),
-    );
-  }
-
-  // 플레이리스트 팝업을 표시하는 함수
-  void _showPlaylistPopup(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierColor: Colors.black.withOpacity(1), // 배경을 불투명으로 설정
-      builder: (BuildContext context) {
-        return PlaylistPopup(
-          artistName: artistName,
-          songTitle: songTitle,
-          albumCover: albumCover,
-        );
-      },
-    );
-  }
-}
-
-class PlaylistPopup extends StatelessWidget {
-  final String artistName;
-  final String songTitle;
-  final String albumCover;
-
-  PlaylistPopup({
-    required this.artistName,
-    required this.songTitle,
-    required this.albumCover,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      insetPadding:
-          EdgeInsets.symmetric(horizontal: 200, vertical: 15), // 팝업 크기 조정
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Material(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '$artistName - $songTitle',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.close),
-                      onPressed: () {
-                        Navigator.of(context).pop(); // 팝업 닫기
-                      },
-                    ),
-                  ],
-                ),
-                SizedBox(height: 20),
-                chatroom.Image.network(
-                  albumCover,
-                  width: 120,
-                  height: 120,
-                ),
-                SizedBox(height: 20),
-                Text(
-                  'Artist: $artistName',
-                  style: TextStyle(fontSize: 14),
-                ),
-                Text(
-                  'Song: $songTitle',
-                  style: TextStyle(fontSize: 14),
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }

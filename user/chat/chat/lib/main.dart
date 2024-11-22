@@ -13,12 +13,6 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      routes: {
-        '/chat': (context) => const ChatListPage(),
-        '/RequestChat': (context) =>
-            RequestPage(), // request.dart에 정의된 RequestPage를 사용
-        '/chatroom': (context) => const ChatRoomPage(), // ChatRoomPage 추가
-      },
       home: const ChatListPage(),
     );
   }
@@ -109,8 +103,12 @@ class _ChatListPageState extends State<ChatListPage> {
                       ),
                       ElevatedButton(
                         onPressed: () {
-                          Navigator.pushNamed(context,
-                              '/RequestChat'); // request.dart에서 정의된 RequestChatPage로 이동
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => RequestPage(),
+                            ),
+                          ); // request.dart에서 정의된 RequestChatPage로 이동
                         },
                         child: const Text('Request Chat'),
                       ),
@@ -128,7 +126,12 @@ class _ChatListPageState extends State<ChatListPage> {
                             }
                           },
                           onTap: () {
-                            Navigator.pushNamed(context, '/chatroom');
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const ChatRoomPage(),
+                              ),
+                            ); // ChatRoomPage로 이동
                           },
                           child: ChatBox(
                             profileImageUrl: chatList[index]
@@ -257,7 +260,12 @@ class NavigationDrawer extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: InkWell(
         onTap: () {
-          Navigator.pushNamed(context, route);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const ChatListPage(),
+            ),
+          ); // 라우트 대신 MaterialPageRoute로 페이지 이동
         },
         child: Row(
           children: [
