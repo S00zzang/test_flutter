@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'main.dart'; // ChatListPage가 main.dart에 있으므로 그대로 사용
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:spotify_sdk/spotify_sdk.dart'; // Spotify SDK 사용
 
 void main() {
   runApp(const MyApp());
@@ -40,26 +39,6 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   String userNickname = "User123"; // 예시로 사용자 닉네임 설정
   String profileImageUrl =
       "https://www.example.com/profile.jpg"; // 예시 프로필 이미지 URL
-
-  // Spotify SDK와 연결할 클라이언트 설정
-  @override
-  void initState() {
-    super.initState();
-    _initializeSpotify();
-  }
-
-  Future<void> _initializeSpotify() async {
-    try {
-      final result = await SpotifySdk.connectToSpotifyRemote(
-        clientId:
-            'cc1046e4674f4a2faf2604736c8fc30c', // Spotify Developer Dashboard에서 발급받은 clientId
-        redirectUrl: 'ku.wave.dot.dot.dot', // 예: http://localhost:8888/callback
-      );
-      print("Spotify connected: $result");
-    } catch (e) {
-      print("Error connecting to Spotify: $e");
-    }
-  }
 
   String _getFormattedTime() {
     final now = DateTime.now();
@@ -218,12 +197,6 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                         ),
                         onPressed: _isTyping ? _sendMessage : null,
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.music_note, color: Colors.blue),
-                        onPressed: () async {
-                          await _searchSpotify(); // 음악 검색 실행
-                        },
-                      ),
                     ],
                   ),
                 ),
@@ -238,7 +211,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     );
   }
 
-  // 사이드바 화면 (Spotify 음악 리스트)
+  // 사이드바 화면
   Widget _buildSideBar() {
     return Container(
       width: 250,
@@ -252,73 +225,10 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
               style: TextStyle(color: Colors.white),
             ),
           ),
-          FutureBuilder<List<Track>>(
-            future: _fetchSpotifyMusic(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const CircularProgressIndicator();
-              } else if (snapshot.hasError) {
-                return const Text('Error fetching music');
-              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const Text('No music available');
-              } else {
-                final musicList = snapshot.data!;
-                return ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: musicList.length,
-                  itemBuilder: (context, index) {
-                    final track = musicList[index];
-                    return ListTile(
-                      leading: Image.network(track.album.images.first.url,
-                          width: 300, height: 300),
-                      title: Text(track.name),
-                      subtitle:
-                          Text(track.artists.map((e) => e.name).join(', ')),
-                    );
-                  },
-                );
-              }
-            },
-          ),
+          // 여기에서는 Spotify 관련 API 호출을 제거했습니다.
         ],
       ),
     );
-  }
-
-  // Spotify Web API로 음악 목록 가져오기
-  Future<List<Track>> _fetchSpotifyMusic() async {
-    final query = 'top charts';
-    final response = await http.get(
-      Uri.parse(
-          'https://api.spotify.com/v1/search?q=$query&type=track&limit=10'),
-      headers: {
-        'Authorization': 'Bearer YOUR_ACCESS_TOKEN', // 액세스 토큰을 헤더에 추가
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> data = json.decode(response.body);
-      final List<dynamic> tracks = data['tracks']['items'];
-      return tracks.map((trackData) => Track.fromJson(trackData)).toList();
-    } else {
-      throw Exception('Failed to fetch tracks');
-    }
-  }
-
-  // Spotify 노래 검색 기능
-  Future<void> _searchSpotify() async {
-    try {
-      final trackSearch = await _fetchSpotifyMusic(); // 여기서 이미 'top charts' 검색
-      final track = trackSearch.first;
-      setState(() {
-        chatMessages.add(ChatMessage(
-            message:
-                'Sharing Song: ${track.name} by ${track.artists.map((e) => e.name).join(', ')}',
-            time: _getFormattedTime()));
-      });
-    } catch (e) {
-      print("Error searching for Spotify track: $e");
-    }
   }
 }
 
@@ -328,56 +238,4 @@ class ChatMessage {
   final String time;
 
   ChatMessage({required this.message, required this.time});
-}
-
-// Track 모델 클래스 (Spotify Web API 응답에 맞게)
-class Track {
-  final String name;
-  final List<Artist> artists;
-  final Album album;
-
-  Track({required this.name, required this.artists, required this.album});
-
-  factory Track.fromJson(Map<String, dynamic> json) {
-    return Track(
-      name: json['name'],
-      artists:
-          List<Artist>.from(json['artists'].map((x) => Artist.fromJson(x))),
-      album: Album.fromJson(json['album']),
-    );
-  }
-}
-
-class Artist {
-  final String name;
-
-  Artist({required this.name});
-
-  factory Artist.fromJson(Map<String, dynamic> json) {
-    return Artist(name: json['name']);
-  }
-}
-
-class Album {
-  final List<Image> images;
-
-  Album({required this.images});
-
-  factory Album.fromJson(Map<String, dynamic> json) {
-    return Album(
-      images: List<Image>.from(json['images'].map((x) => Image.fromJson(x))),
-    );
-  }
-}
-
-class Image {
-  final String url;
-
-  Image({required this.url});
-
-  factory Image.fromJson(Map<String, dynamic> json) {
-    return Image(url: json['url']);
-  }
-
-  static network(String url, {required int width, required int height}) {}
 }
