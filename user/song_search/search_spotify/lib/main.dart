@@ -13,7 +13,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  List selectedTracks = []; // 플레이리스트에 담긴 트랙
+  List selectedTracks = []; // 플레이리스트에 담긴 트랙 (track ID로 관리)
   final String apiUrl = 'http://192.168.0.2:3000/spotify'; // Node.js 서버 URL
 
   @override
@@ -32,7 +32,7 @@ class _MyAppState extends State<MyApp> {
 }
 
 class PlaylistPage extends StatefulWidget {
-  final List selectedTracks;
+  final List selectedTracks; // track ID로 관리된 리스트
   final Function(List) onPlaylistUpdated;
 
   PlaylistPage({required this.selectedTracks, required this.onPlaylistUpdated});
@@ -74,9 +74,10 @@ class _PlaylistPageState extends State<PlaylistPage> {
 
   // 플레이리스트에 노래 추가
   void _addToPlaylist(Map<String, dynamic> track) {
-    if (!widget.selectedTracks.contains(track)) {
+    // track['id']가 이미 selectedTracks에 없다면 추가
+    if (!widget.selectedTracks.contains(track['id'])) {
       setState(() {
-        widget.selectedTracks.add(track);
+        widget.selectedTracks.add(track['id']); // track ID만 추가
       });
       widget.onPlaylistUpdated(widget.selectedTracks); // 상태 업데이트
     }
@@ -85,7 +86,7 @@ class _PlaylistPageState extends State<PlaylistPage> {
   // 플레이리스트에서 노래 삭제
   void _removeFromPlaylist(Map<String, dynamic> track) {
     setState(() {
-      widget.selectedTracks.remove(track);
+      widget.selectedTracks.remove(track['id']); // track ID로 삭제
     });
     widget.onPlaylistUpdated(widget.selectedTracks); // 상태 업데이트
   }
@@ -158,7 +159,10 @@ class _PlaylistPageState extends State<PlaylistPage> {
                           child: ListView.builder(
                             itemCount: widget.selectedTracks.length,
                             itemBuilder: (context, index) {
-                              final track = widget.selectedTracks[index];
+                              final trackId = widget.selectedTracks[index];
+                              // trackId를 사용해서 트랙을 가져옵니다
+                              final track = tracks.firstWhere(
+                                  (track) => track['id'] == trackId);
                               return ListTile(
                                 leading: track['album']['images'].isNotEmpty
                                     ? Image.network(
@@ -226,6 +230,8 @@ class _PlaylistPageState extends State<PlaylistPage> {
                             itemCount: tracks.length,
                             itemBuilder: (context, index) {
                               final track = tracks[index];
+                              final isAlreadyAdded =
+                                  widget.selectedTracks.contains(track['id']);
                               return ListTile(
                                 leading: track['album']['images'].isNotEmpty
                                     ? Image.network(
@@ -241,12 +247,12 @@ class _PlaylistPageState extends State<PlaylistPage> {
                                     .join(', ')),
                                 trailing: ElevatedButton(
                                   onPressed: () {
-                                    _addToPlaylist(track);
+                                    if (!isAlreadyAdded) {
+                                      _addToPlaylist(track);
+                                    }
                                   },
-                                  child: Text(
-                                      widget.selectedTracks.contains(track)
-                                          ? '이미 담긴 곡'
-                                          : '담기'),
+                                  child:
+                                      Text(isAlreadyAdded ? '이미 담긴 곡' : '담기'),
                                 ),
                               );
                             },
