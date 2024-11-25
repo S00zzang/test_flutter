@@ -9,7 +9,7 @@ app.use(cors()); // CORS 미들웨어를 사용
 
 
 // Spotify API 액세스 토큰 (이 값은 실제 토큰으로 교체해야 함)
-const token = 'BQBLd5wNNvZPcdnIqMPDLa-Crp9cijYKmK9aj04K-63aaGD8RHFXTeX9ukRkqaf2QFroN_OSYITPE_w6bhLsMlr7S2RX0TeNWBpgkBrO__FIhyBIWRQ'; //'<Token>';  // 여기에 본인의 Spotify Access Token을 넣으세요
+const token = 'BQAJj9GNSyQiwlS2_V5DSpFcUwbZdNu4dP2ZDx0fXhQkEba5-5GbWmSONLi5jIGzhUcpuiAfCGWxajF0oJfri7PC9Py6c2PckeH2IdmIAEzEB-mQce0'; //'<Token>';  // 여기에 본인의 Spotify Access Token을 넣으세요
 
 // Spotify API 요청을 프록시하는 엔드포인트
 app.get('/spotify', async (req, res) => {

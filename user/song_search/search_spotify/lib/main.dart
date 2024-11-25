@@ -1,21 +1,42 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'my_playlist.dart'; // 새 페이지 import
 
 void main() {
   runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  List selectedTracks = []; // 플레이리스트에 담긴 트랙
+  final String apiUrl = 'http://192.168.0.2:3000/spotify'; // Node.js 서버 URL
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: PlaylistPage(),
+      home: PlaylistPage(
+        selectedTracks: selectedTracks,
+        onPlaylistUpdated: (newTracks) {
+          setState(() {
+            selectedTracks = newTracks; // 업데이트된 플레이리스트 상태 관리
+          });
+        },
+      ),
     );
   }
 }
 
 class PlaylistPage extends StatefulWidget {
+  final List selectedTracks;
+  final Function(List) onPlaylistUpdated;
+
+  PlaylistPage({required this.selectedTracks, required this.onPlaylistUpdated});
+
   @override
   _PlaylistPageState createState() => _PlaylistPageState();
 }
@@ -23,11 +44,10 @@ class PlaylistPage extends StatefulWidget {
 class _PlaylistPageState extends State<PlaylistPage> {
   final TextEditingController _searchController = TextEditingController();
   List tracks = []; // 검색된 트랙 리스트
-  List selectedTracks = []; // 플레이리스트에 담긴 트랙
   bool isSidebarOpen = true; // 사이드바 상태 관리
   int offset = 0; // Spotify API에서 10곡씩 가져오기 위한 오프셋
 
-  final String apiUrl = 'http://192.168.45.134:3000/spotify'; // Node.js 서버 URL
+  final String apiUrl = 'http://192.168.0.2:3000/spotify'; // Node.js 서버 URL
 
   // Spotify 검색 API 호출
   Future<void> _searchSpotify() async {
@@ -54,49 +74,47 @@ class _PlaylistPageState extends State<PlaylistPage> {
 
   // 플레이리스트에 노래 추가
   void _addToPlaylist(Map<String, dynamic> track) {
-    if (!selectedTracks.contains(track)) {
+    if (!widget.selectedTracks.contains(track)) {
       setState(() {
-        selectedTracks.add(track);
+        widget.selectedTracks.add(track);
       });
+      widget.onPlaylistUpdated(widget.selectedTracks); // 상태 업데이트
     }
   }
 
   // 플레이리스트에서 노래 삭제
   void _removeFromPlaylist(Map<String, dynamic> track) {
     setState(() {
-      selectedTracks.remove(track);
+      widget.selectedTracks.remove(track);
     });
+    widget.onPlaylistUpdated(widget.selectedTracks); // 상태 업데이트
   }
 
   // 플레이리스트가 최소 10곡 이상일 때
-  bool get isPlaylistComplete => selectedTracks.length >= 10;
+  bool get isPlaylistComplete => widget.selectedTracks.length >= 10;
 
   // 플레이리스트 완성 여부 체크
   void _onComplete() {
     if (isPlaylistComplete) {
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: Text("플레이리스트 완성"),
-          content: Text("축하합니다! 플레이리스트가 완성되었습니다."),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("확인"),
-            ),
-          ],
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MyPlaylistPage(
+            selectedTracks: widget.selectedTracks,
+            onPlaylistUpdated: widget.onPlaylistUpdated, // 상태 전달
+          ),
         ),
       );
     } else {
       showDialog(
         context: context,
         builder: (_) => AlertDialog(
-          title: Text("플레이리스트 미완성"),
-          content: Text("노래를 더 담아야 합니다. 최소 10곡을 선택하세요."),
+          title: const Text("플레이리스트 미완성"),
+          content: const Text("최소 10곡을 선택하세요."),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text("확인"),
+              child: const Text("확인"),
             ),
           ],
         ),
@@ -120,7 +138,7 @@ class _PlaylistPageState extends State<PlaylistPage> {
           isSidebarOpen
               ? Container(
                   width: 250,
-                  color: Colors.grey[200],
+                  color: Colors.grey[200], // 사이드바 열릴 때 색깔 지정
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Column(
@@ -138,9 +156,9 @@ class _PlaylistPageState extends State<PlaylistPage> {
                         const SizedBox(height: 10),
                         Expanded(
                           child: ListView.builder(
-                            itemCount: selectedTracks.length,
+                            itemCount: widget.selectedTracks.length,
                             itemBuilder: (context, index) {
-                              final track = selectedTracks[index];
+                              final track = widget.selectedTracks[index];
                               return ListTile(
                                 leading: track['album']['images'].isNotEmpty
                                     ? Image.network(
@@ -225,9 +243,10 @@ class _PlaylistPageState extends State<PlaylistPage> {
                                   onPressed: () {
                                     _addToPlaylist(track);
                                   },
-                                  child: Text(selectedTracks.contains(track)
-                                      ? '이미 담긴 곡'
-                                      : '담기'),
+                                  child: Text(
+                                      widget.selectedTracks.contains(track)
+                                          ? '이미 담긴 곡'
+                                          : '담기'),
                                 ),
                               );
                             },
