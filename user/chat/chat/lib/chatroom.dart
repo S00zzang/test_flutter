@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'main.dart'; // ChatListPage가 main.dart에 있으므로 그대로 사용
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'main.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,10 +16,9 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       routes: {
         '/chatroom': (context) => const ChatRoomPage(),
-        '/chatlist': (context) =>
-            const ChatListPage(), // ChatListPage로 이동할 수 있는 라우트 추가
+        '/chatlist': (context) => const ChatListPage(),
       },
-      home: const ChatListPage(), // 앱 시작 시 ChatListPage를 기본 화면으로 설정
+      home: const ChatListPage(),
     );
   }
 }
@@ -35,10 +34,10 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   bool isMenuOpen = false;
   final TextEditingController _messageController = TextEditingController();
   bool _isTyping = false;
-  List<ChatMessage> chatMessages = []; // 채팅 메시지 리스트
-  String userNickname = "User123"; // 예시로 사용자 닉네임 설정
-  String profileImageUrl =
-      "https://www.example.com/profile.jpg"; // 예시 프로필 이미지 URL
+  List<ChatMessage> chatMessages = [];
+  List<String> sharedMusicList = []; // 공유된 음악 리스트
+  String userNickname = "User123";
+  String profileImageUrl = "https://www.example.com/profile.jpg";
 
   String _getFormattedTime() {
     final now = DateTime.now();
@@ -50,29 +49,40 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     return '$year년 $month월 $day일 ${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
   }
 
-  // 메시지를 보내는 함수
-  void _sendMessage() {
-    if (_messageController.text.isNotEmpty) {
+  // 메시지를 채팅에 추가하는 함수
+  void _sendMessage(String message) {
+    if (message.isNotEmpty) {
       setState(() {
         String currentTime = _getFormattedTime();
-        chatMessages.add(
-            ChatMessage(message: _messageController.text, time: currentTime));
+        chatMessages.add(ChatMessage(message: message, time: currentTime));
+        if (message.contains('-')) {
+          // 음악 메시지라면 공유된 음악 리스트에 추가
+          sharedMusicList.add(message);
+        }
         _messageController.clear();
         _isTyping = false;
       });
     }
   }
 
-  // 채팅방 나가기
-  void _leaveChatRoom() {
-    Navigator.pop(context); // ChatListPage로 돌아가기
-  }
-
-  // 메시지 입력시 타이핑 상태에 따른 아이콘 변경
   void _onMessageChange(String text) {
     setState(() {
       _isTyping = text.isNotEmpty;
     });
+  }
+
+  // 팝업창을 띄워서 Spotify에서 음악을 검색할 수 있도록 구현
+  Future<void> _searchMusic() async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return MusicSearchDialog(
+          onSongSelected: (song) {
+            _sendMessage(song); // 선택된 노래를 바로 메시지로 보냄
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -82,41 +92,38 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pop(context); // 뒤로 가기 버튼 클릭 시 ChatListPage로 이동
+            Navigator.pop(context);
           },
         ),
-        title: Text(userNickname), // 대화 상대의 닉네임
+        title: Text(userNickname),
         actions: [
           IconButton(
             icon: const Icon(Icons.menu),
             onPressed: () {
               setState(() {
-                isMenuOpen = !isMenuOpen; // 메뉴 버튼 클릭 시 사이드바 열고 닫기
+                isMenuOpen = !isMenuOpen;
               });
             },
           ),
         ],
-        backgroundColor: Colors.blueGrey[900], // 앱바 배경색을 설정 (예: 어두운 블루그레이)
-        foregroundColor: Colors.white, // 앱바의 텍스트와 아이콘 색상 설정
+        backgroundColor: Colors.blueGrey[900],
+        foregroundColor: Colors.white,
       ),
       body: Row(
         children: [
-          // 채팅방 영역
           Expanded(
             child: Column(
               children: [
-                // 채팅 메시지 영역
                 Expanded(
                   child: ListView.builder(
                     itemCount: chatMessages.length,
                     itemBuilder: (context, index) {
-                      bool isUserMessage =
-                          index % 2 == 0; // 임의로 사용자 메시지를 짝수 인덱스에 설정
+                      bool isUserMessage = index % 2 == 0;
                       final chatMessage = chatMessages[index];
                       return Align(
                         alignment: isUserMessage
-                            ? Alignment.centerRight // 내 메시지는 오른쪽
-                            : Alignment.centerLeft, // 상대방 메시지는 왼쪽
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: Row(
@@ -171,8 +178,6 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                     },
                   ),
                 ),
-
-                // 하단 바 영역
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Row(
@@ -182,7 +187,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                           controller: _messageController,
                           onChanged: _onMessageChange,
                           onSubmitted: (_) {
-                            _sendMessage(); // 엔터키를 눌러서 메시지 전송
+                            _sendMessage(_messageController.text); // 엔터로 전송
                           },
                           decoration: const InputDecoration(
                             hintText: 'Enter your message...',
@@ -195,7 +200,15 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                           _isTyping ? Icons.send : Icons.send,
                           color: _isTyping ? Colors.blue : Colors.grey,
                         ),
-                        onPressed: _isTyping ? _sendMessage : null,
+                        onPressed: _isTyping
+                            ? () {
+                                _sendMessage(_messageController.text);
+                              }
+                            : null,
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.music_note),
+                        onPressed: _searchMusic, // 음악 검색 팝업 호출
                       ),
                     ],
                   ),
@@ -203,15 +216,12 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
               ],
             ),
           ),
-
-          // 사이드바 화면을 오른쪽에 표시
           if (isMenuOpen) _buildSideBar(),
         ],
       ),
     );
   }
 
-  // 사이드바 화면
   Widget _buildSideBar() {
     return Container(
       width: 250,
@@ -220,22 +230,204 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
         children: [
           const Padding(
             padding: EdgeInsets.all(8.0),
-            child: Text(
-              'Shared Music List',
-              style: TextStyle(color: Colors.white),
+            child: Text('Shared Music List',
+                style: TextStyle(color: Colors.white, fontSize: 20)),
+          ),
+          // 공유된 음악 리스트 표시
+          Expanded(
+            child: ListView.builder(
+              itemCount: sharedMusicList.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Text(
+                    sharedMusicList[index],
+                    style: TextStyle(color: Colors.white, fontSize: 15),
+                  ),
+                );
+              },
             ),
           ),
-          // 여기에서는 Spotify 관련 API 호출을 제거했습니다.
         ],
       ),
     );
   }
 }
 
-// 채팅 메시지 모델 (메시지와 시간을 저장)
+// 채팅 메시지 모델
 class ChatMessage {
   final String message;
   final String time;
 
   ChatMessage({required this.message, required this.time});
+}
+
+// 음악 검색 다이얼로그
+class MusicSearchDialog extends StatefulWidget {
+  final Function(String) onSongSelected;
+
+  const MusicSearchDialog({required this.onSongSelected, super.key});
+
+  @override
+  _MusicSearchDialogState createState() => _MusicSearchDialogState();
+}
+
+class _MusicSearchDialogState extends State<MusicSearchDialog> {
+  TextEditingController _searchController = TextEditingController();
+  List<String> _searchResults = [];
+  String? _selectedSong;
+  String? _selectedSongArtist;
+
+  // 서버에서 음악 검색
+  Future<void> _searchSpotify(String query) async {
+    if (query.isEmpty) return; // 빈 값일 때는 검색하지 않음
+
+    final response =
+        await http.get(Uri.parse('http://192.168.0.2:3000/spotify?q=$query'));
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      setState(() {
+        _searchResults = data['tracks']['items'].map<String>((item) {
+          return '${item['name']} - ${item['artists'][0]['name']}'; // 노래 이름과 아티스트
+        }).toList();
+      });
+    } else {
+      setState(() {
+        _searchResults = [];
+      });
+    }
+  }
+
+  // 선택된 노래 바로 전송
+  void _sendSong() {
+    if (_selectedSong != null) {
+      widget.onSongSelected(
+          '$_selectedSong - $_selectedSongArtist'); // 선택된 노래를 메세지로 보내기
+      Navigator.pop(context); // 팝업만 닫기
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      insetPadding: EdgeInsets.all(30), // 팝업 여백 조정
+      child: Container(
+        width: 650, // 팝업 너비 조정
+        height: 450, // 팝업 높이 조정
+        padding: EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 10,
+              offset: Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 제목과 닫기 버튼
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Search Music',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context), // 다이얼로그 닫기
+                ),
+              ],
+            ),
+            SizedBox(height: 10),
+            // 검색 창과 버튼
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Search for a song...',
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: (value) {
+                      // 사용자가 입력한 검색어에 대해 즉시 결과를 표시하지 않음
+                    },
+                    onSubmitted: (value) {
+                      _searchSpotify(value); // 엔터 키로 검색 실행
+                    },
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.search),
+                  onPressed: () {
+                    _searchSpotify(_searchController.text); // 검색 버튼 클릭 시 검색
+                  },
+                ),
+              ],
+            ),
+            SizedBox(height: 20),
+            // 검색된 음악 리스트
+            if (_searchResults.isNotEmpty) // 검색 결과가 있을 때만 리스트를 표시
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _searchResults.length,
+                  itemBuilder: (context, index) {
+                    final song = _searchResults[index];
+                    final split = song.split(" - ");
+                    final songName = split[0];
+                    final artistName = split[1];
+                    return ListTile(
+                      title: Text(song),
+                      onTap: () {
+                        setState(() {
+                          _selectedSong = songName;
+                          _selectedSongArtist = artistName; // 아티스트 이름 저장
+                        });
+                      },
+                      selected: _selectedSong == song, // 선택된 노래 강조
+                    );
+                  },
+                ),
+              ),
+            SizedBox(height: 10),
+            // 선택된 노래와 전송 버튼
+            if (_selectedSong != null)
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Column(
+                  children: [
+                    // Selected Song: 노래 제목과 가수 이름을 같은 라인에 표시
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Selected Song: ',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          '$_selectedSong - $_selectedSongArtist',
+                          style: TextStyle(color: Colors.blue),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 10),
+                    ElevatedButton(
+                      onPressed: _sendSong, // 전송 버튼 클릭 시 바로 전송
+                      child: Text('Send Song'),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 }

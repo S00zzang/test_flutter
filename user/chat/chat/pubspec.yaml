@@ -11,10 +11,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
+  http: ^1.2.2
+
   cupertino_icons: ^1.0.8
-  
- # Spotify SDK 추가
-  spotify_sdk: ^3.0.2  # 최신 버전 (버전 확인 후 사용)
 
 dev_dependencies:
   flutter_test:
