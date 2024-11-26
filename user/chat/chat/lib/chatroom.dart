@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'package:flutter/gestures.dart'; //url만 밑줄
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'main.dart';
+import 'package:url_launcher/url_launcher.dart'; // url_launcher 패키지 임포트
 
 void main() {
   runApp(const MyApp());
@@ -55,9 +57,10 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
       setState(() {
         String currentTime = _getFormattedTime();
         chatMessages.add(ChatMessage(message: message, time: currentTime));
-        if (message.contains('-')) {
-          // 음악 메시지라면 공유된 음악 리스트에 추가
-          sharedMusicList.add(message);
+        if (message.contains('https://open.spotify.com/embed/track/')) {
+          // 음악 메시지라면 노래 제목과 가수만 sharedMusicList에 추가
+          final splitMessage = message.split("\n")[0]; // '노래 제목 - 가수' 부분만 추출
+          sharedMusicList.add(splitMessage);
         }
         _messageController.clear();
         _isTyping = false;
@@ -83,6 +86,15 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
         );
       },
     );
+  }
+
+  // URL을 여는 함수
+  Future<void> launchURL(String url) async {
+    if (await canLaunch(url)) {
+      await launch(url); // URL 열기
+    } else {
+      throw 'Could not launch $url';
+    }
   }
 
   @override
@@ -149,12 +161,11 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        chatMessage.message,
-                                        style: TextStyle(
-                                          color: isUserMessage
-                                              ? Colors.white
-                                              : Colors.black,
+                                      // 채팅 메시지에서 URL을 감지하여 링크로 만들기
+                                      RichText(
+                                        text: TextSpan(
+                                          children: _getTextSpans(
+                                              chatMessage.message),
                                         ),
                                       ),
                                       const SizedBox(height: 4),
@@ -222,6 +233,44 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     );
   }
 
+  // URL을 클릭 가능한 링크로 변환
+  List<TextSpan> _getTextSpans(String message) {
+    final regex = RegExp(r'(https?://[^\s]+)');
+    final matches = regex.allMatches(message);
+    List<TextSpan> textSpans = [];
+
+    int start = 0;
+    for (final match in matches) {
+      if (match.start > start) {
+        textSpans.add(TextSpan(
+            text: message.substring(start, match.start),
+            style: TextStyle(color: Colors.black)));
+      }
+
+      final url = match.group(0)!;
+      textSpans.add(TextSpan(
+          text: url,
+          style: TextStyle(
+              color: const Color.fromARGB(255, 122, 123, 124),
+              decoration: TextDecoration.underline),
+          recognizer: TapGestureRecognizer()
+            ..onTap = () {
+              launchURL(url);
+            }));
+
+      start = match.end;
+    }
+
+    // 남은 텍스트 추가
+    if (start < message.length) {
+      textSpans.add(TextSpan(
+          text: message.substring(start),
+          style: TextStyle(color: Colors.black)));
+    }
+
+    return textSpans;
+  }
+
   Widget _buildSideBar() {
     return Container(
       width: 250,
@@ -273,9 +322,10 @@ class MusicSearchDialog extends StatefulWidget {
 
 class _MusicSearchDialogState extends State<MusicSearchDialog> {
   TextEditingController _searchController = TextEditingController();
-  List<String> _searchResults = [];
+  List<Map<String, dynamic>> _searchResults = []; // 트랙 ID와 정보를 함께 저장
   String? _selectedSong;
   String? _selectedSongArtist;
+  String? _selectedTrackId;
 
   // 서버에서 음악 검색
   Future<void> _searchSpotify(String query) async {
@@ -286,8 +336,13 @@ class _MusicSearchDialogState extends State<MusicSearchDialog> {
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       setState(() {
-        _searchResults = data['tracks']['items'].map<String>((item) {
-          return '${item['name']} - ${item['artists'][0]['name']}'; // 노래 이름과 아티스트
+        _searchResults =
+            data['tracks']['items'].map<Map<String, dynamic>>((item) {
+          return {
+            'name': item['name'],
+            'artist': item['artists'][0]['name'],
+            'id': item['id'], // 트랙 ID 추가
+          };
         }).toList();
       });
     } else {
@@ -299,9 +354,11 @@ class _MusicSearchDialogState extends State<MusicSearchDialog> {
 
   // 선택된 노래 바로 전송
   void _sendSong() {
-    if (_selectedSong != null) {
-      widget.onSongSelected(
-          '$_selectedSong - $_selectedSongArtist'); // 선택된 노래를 메세지로 보내기
+    if (_selectedSong != null && _selectedTrackId != null) {
+      // 노래 제목, 가수, 트랙 URL을 포함한 메시지 포맷
+      final songMessage = '$_selectedSong - $_selectedSongArtist\n'
+          'https://open.spotify.com/embed/track/$_selectedTrackId';
+      widget.onSongSelected(songMessage); // 선택된 노래를 메세지로 보내기
       Navigator.pop(context); // 팝업만 닫기
     }
   }
@@ -380,18 +437,20 @@ class _MusicSearchDialogState extends State<MusicSearchDialog> {
                   itemCount: _searchResults.length,
                   itemBuilder: (context, index) {
                     final song = _searchResults[index];
-                    final split = song.split(" - ");
-                    final songName = split[0];
-                    final artistName = split[1];
+                    final songName = song['name'];
+                    final artistName = song['artist'];
+                    final trackId = song['id'];
+
                     return ListTile(
-                      title: Text(song),
+                      title: Text('$songName - $artistName'),
                       onTap: () {
                         setState(() {
                           _selectedSong = songName;
-                          _selectedSongArtist = artistName; // 아티스트 이름 저장
+                          _selectedSongArtist = artistName;
+                          _selectedTrackId = trackId; // 트랙 ID 저장
                         });
                       },
-                      selected: _selectedSong == song, // 선택된 노래 강조
+                      selected: _selectedSong == songName, // 선택된 노래 강조
                     );
                   },
                 ),
