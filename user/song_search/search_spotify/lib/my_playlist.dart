@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:confetti/confetti.dart'; // confetti 애니메이션 패키지
-import 'main.dart'; // main.dart로 돌아가기 위해 import
+import 'make_playlist.dart'; // main.dart로 돌아가기 위한 import
 
 void main() {
   runApp(MyApp());
@@ -35,11 +35,14 @@ class _MyPlaylistPageState extends State<MyPlaylistPage> {
 
   // 플레이리스트에서 노래 삭제
   void _removeTrack(BuildContext context, Map<String, dynamic> track) {
-    final newSelectedTracks = List.from(widget.selectedTracks);
-    newSelectedTracks.remove(track);
+    setState(() {
+      // 새로운 리스트 생성 (삭제할 트랙을 제외한 리스트)
+      widget.selectedTracks
+          .removeWhere((selectedTrack) => selectedTrack['id'] == track['id']);
+    });
 
-    // 삭제된 리스트를 업데이트하여 새로 렌더링
-    widget.onPlaylistUpdated(newSelectedTracks); // 상태 업데이트
+    // 삭제 후 상태 업데이트
+    widget.onPlaylistUpdated(widget.selectedTracks); // 상태 업데이트
   }
 
   // '완성' 버튼 눌렀을 때 처리
@@ -65,7 +68,19 @@ class _MyPlaylistPageState extends State<MyPlaylistPage> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context), // 팝업 닫기
+              onPressed: () {
+                Navigator.pop(context); // 팝업 닫기
+                // '확인' 버튼 클릭 후 더 담기 화면으로 이동
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PlaylistPage(
+                      selectedTracks: widget.selectedTracks,
+                      onPlaylistUpdated: widget.onPlaylistUpdated,
+                    ),
+                  ),
+                );
+              },
               child: const Text("확인"),
             ),
           ],

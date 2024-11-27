@@ -39,6 +39,9 @@ dependencies:
   http: ^1.2.2
 
   cupertino_icons: ^1.0.8
+  shared_preferences: ^2.3.3
+  confetti: ^0.8.0
+
 ```
 
 $ flutter pub get
