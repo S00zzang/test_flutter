@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'dart:async'; // Timer를 사용하기 위해 추가
 import 'my_playlist.dart'; // 새 페이지 import
 
 void main() {
@@ -45,6 +46,7 @@ class _PlaylistPageState extends State<PlaylistPage> {
   final TextEditingController _searchController = TextEditingController();
   List tracks = []; // 검색된 트랙 리스트
   bool isSidebarOpen = true; // 사이드바 상태 관리
+  bool isLoading = false; // 로딩 상태
   int offset = 0; // Spotify API에서 10곡씩 가져오기 위한 오프셋
 
   final String apiUrl = 'http://192.168.0.2:3000/spotify'; // Node.js 서버 URL
@@ -52,7 +54,12 @@ class _PlaylistPageState extends State<PlaylistPage> {
   // Spotify 검색 API 호출
   Future<void> _searchSpotify() async {
     final query = _searchController.text.trim();
-    if (query.isEmpty) return;
+    if (query.isEmpty || isLoading) return; // 로딩 중이거나 검색어가 비어 있으면 실행하지 않음
+
+    setState(() {
+      isLoading = true; // 로딩 상태로 설정
+      tracks = []; // 새로운 검색을 시작할 때 기존 트랙 리스트 비우기
+    });
 
     try {
       final response = await http.get(
@@ -69,15 +76,25 @@ class _PlaylistPageState extends State<PlaylistPage> {
       }
     } catch (e) {
       print('Error: $e');
+    } finally {
+      setState(() {
+        isLoading = false; // 로딩 상태 해제
+      });
     }
   }
 
   // 플레이리스트에 노래 추가
   void _addToPlaylist(Map<String, dynamic> track) {
     // track['id']가 이미 selectedTracks에 없다면 추가
-    if (!widget.selectedTracks.contains(track['id'])) {
+    if (!widget.selectedTracks
+        .any((selectedTrack) => selectedTrack['id'] == track['id'])) {
       setState(() {
-        widget.selectedTracks.add(track['id']); // track ID만 추가
+        widget.selectedTracks.add({
+          'id': track['id'],
+          'name': track['name'],
+          'artists': track['artists'],
+          'album': track['album'],
+        }); // track의 모든 정보를 추가
       });
       widget.onPlaylistUpdated(widget.selectedTracks); // 상태 업데이트
     }
@@ -86,7 +103,8 @@ class _PlaylistPageState extends State<PlaylistPage> {
   // 플레이리스트에서 노래 삭제
   void _removeFromPlaylist(Map<String, dynamic> track) {
     setState(() {
-      widget.selectedTracks.remove(track['id']); // track ID로 삭제
+      widget.selectedTracks.removeWhere((selectedTrack) =>
+          selectedTrack['id'] == track['id']); // track ID로 삭제
     });
     widget.onPlaylistUpdated(widget.selectedTracks); // 상태 업데이트
   }
@@ -159,10 +177,7 @@ class _PlaylistPageState extends State<PlaylistPage> {
                           child: ListView.builder(
                             itemCount: widget.selectedTracks.length,
                             itemBuilder: (context, index) {
-                              final trackId = widget.selectedTracks[index];
-                              // trackId를 사용해서 트랙을 가져옵니다
-                              final track = tracks.firstWhere(
-                                  (track) => track['id'] == trackId);
+                              final track = widget.selectedTracks[index];
                               return ListTile(
                                 leading: track['album']['images'].isNotEmpty
                                     ? Image.network(
@@ -212,51 +227,55 @@ class _PlaylistPageState extends State<PlaylistPage> {
                             labelText: 'Search for songs or artists',
                             border: OutlineInputBorder(),
                           ),
-                          onSubmitted: (_) => _searchSpotify(), // 엔터 키로도 검색
+                          onSubmitted: (_) => _searchSpotify(), // 엔터키로 검색
                         ),
                       ),
                       const SizedBox(width: 8),
                       ElevatedButton(
-                        onPressed: _searchSpotify,
+                        onPressed: _searchSpotify, // 버튼 클릭으로 검색
                         child: const Text('Search'),
                       ),
                     ],
                   ),
                   const SizedBox(height: 20),
+                  // 검색 결과가 비어 있으면 로딩 중이나 결과 없음 표시
                   Expanded(
-                    child: tracks.isEmpty
-                        ? const Center(child: Text('No tracks found'))
-                        : ListView.builder(
-                            itemCount: tracks.length,
-                            itemBuilder: (context, index) {
-                              final track = tracks[index];
-                              final isAlreadyAdded =
-                                  widget.selectedTracks.contains(track['id']);
-                              return ListTile(
-                                leading: track['album']['images'].isNotEmpty
-                                    ? Image.network(
-                                        track['album']['images'][0]['url'],
-                                        width: 50,
-                                        height: 50,
-                                        fit: BoxFit.cover,
-                                      )
-                                    : const Icon(Icons.music_note),
-                                title: Text(track['name']),
-                                subtitle: Text(track['artists']
-                                    .map((artist) => artist['name'])
-                                    .join(', ')),
-                                trailing: ElevatedButton(
-                                  onPressed: () {
-                                    if (!isAlreadyAdded) {
-                                      _addToPlaylist(track);
-                                    }
-                                  },
-                                  child:
-                                      Text(isAlreadyAdded ? '이미 담긴 곡' : '담기'),
-                                ),
-                              );
-                            },
-                          ),
+                    child: isLoading
+                        ? const Center(child: Text('로딩 중...'))
+                        : tracks.isEmpty
+                            ? const Center(child: Text('No tracks found'))
+                            : ListView.builder(
+                                itemCount: tracks.length,
+                                itemBuilder: (context, index) {
+                                  final track = tracks[index];
+                                  final isAlreadyAdded = widget.selectedTracks
+                                      .any((selectedTrack) =>
+                                          selectedTrack['id'] == track['id']);
+                                  return ListTile(
+                                    leading: track['album']['images'].isNotEmpty
+                                        ? Image.network(
+                                            track['album']['images'][0]['url'],
+                                            width: 50,
+                                            height: 50,
+                                            fit: BoxFit.cover,
+                                          )
+                                        : const Icon(Icons.music_note),
+                                    title: Text(track['name']),
+                                    subtitle: Text(track['artists']
+                                        .map((artist) => artist['name'])
+                                        .join(', ')),
+                                    trailing: ElevatedButton(
+                                      onPressed: () {
+                                        if (!isAlreadyAdded) {
+                                          _addToPlaylist(track);
+                                        }
+                                      },
+                                      child: Text(
+                                          isAlreadyAdded ? '이미 담긴 곡' : '담기'),
+                                    ),
+                                  );
+                                },
+                              ),
                   ),
                   const SizedBox(height: 20),
                   ElevatedButton(
